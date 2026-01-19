@@ -11,7 +11,7 @@ import NoteForm from "@/components/NoteForm/NoteForm";
 import Modal from "@/components/Modal/Modal";
 
 import { fetchNotes } from "@/lib/api";
-import type { Note } from "@/lib/types";
+import type { Note } from "@/types/note";
 
 import css from "./NotesPage.module.css";
 
