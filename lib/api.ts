@@ -6,12 +6,6 @@ interface FetchNotesResponse {
   totalPages: number;
 }
 
-interface ReplaceNote {
-  title: string;
-  tag: string;
-  content: string;
-}
-
 const NEXT_PUBLIC_NOTEHUB_TOKEN = process.env.NEXT_PUBLIC_NOTEHUB_TOKEN;
 
 axios.defaults.baseURL = "https://notehub-public.goit.study/api";
@@ -45,13 +39,18 @@ export async function fetchNoteId(id: string): Promise<Note> {
   return response.data;
 }
 
-export async function createNote(note: ReplaceNote): Promise<Note> {
+export type CreateNotePayload = {
+  title: string;
+  tag: string;
+  content: string;
+};
+
+export async function createNote(note: CreateNotePayload): Promise<Note> {
   const response = await axios.post<Note>("/notes", note, {
     headers: {
       Authorization: `Bearer ${NEXT_PUBLIC_NOTEHUB_TOKEN}`,
     },
   });
-
   return response.data;
 }
 
