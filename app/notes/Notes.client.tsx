@@ -1,90 +1,90 @@
-"use client";
+'use client';
 
-import { useState, type ChangeEvent } from "react";
-import { useDebouncedCallback } from "use-debounce";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import SearchBox from '@/components/SearchBox/SearchBox';
+import Paginate from '@/components/Pagination/Pagination';
+import NoteList from '@/components/NoteList/NoteList';
+import NoteForm from '@/components/NoteForm/NoteForm';
+import Modal from '@/components/Modal/Modal';
 
-import SearchBox from "@/components/SearchBox/SearchBox";
-import Paginate from "@/components/Pagination/Pagination";
-import NoteList from "@/components/NoteList/NoteList";
-import NoteForm from "@/components/NoteForm/NoteForm";
-import Modal from "@/components/Modal/Modal";
+import { fetchNotes } from '@/lib/api';
 
-import { fetchNotes } from "@/lib/api";
-import type { Note } from "@/types/note";
+import { useState } from 'react';
+import { useDebouncedCallback } from 'use-debounce';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 
-import css from "./NotesPage.module.css";
+import { Note } from '@/types/note';
+
+import css from './NotesPage.module.css';
 
 type NotesResponse = {
-  notes: Note[];
-  totalPages: number;
+   notes: Note[];
+   totalPages: number;
 };
 
 export default function NotesClient() {
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+   const [onQuery, setOnQuery] = useState('');
+   const [page, setPage] = useState(1);
+   const [modalOpen, setModalOpen] = useState(false);
 
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
+   const closeModal = () => setModalOpen(false);
+   const openModal = () => setModalOpen(true);
 
-  const { data, isLoading, isError, isSuccess } = useQuery<NotesResponse>({
-    queryKey: ["notes", { page, query }],
-    // ВАЖЛИВО: page (number) першим, query (string) другим
-    queryFn: () => fetchNotes(page, query),
-    placeholderData: keepPreviousData,
-  });
+   const { data, isSuccess, isLoading, isError } = useQuery<NotesResponse>({
+      queryKey: ['notes', 'list', { page, search: onQuery }],
+      queryFn: () => fetchNotes(page, onQuery),
+      placeholderData: keepPreviousData,
+   });
 
-  const notes = data?.notes ?? [];
-  const totalPages = data?.totalPages ?? 0;
+   const notes = Array.isArray(data?.notes) ? data!.notes : [];
+   const totalPages = data?.totalPages ?? 0;
 
-  const handleSearchChange = useDebouncedCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      setQuery(e.target.value);
-      setPage(1);
-    },
-    250,
-  );
+   const onFound = useDebouncedCallback(
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+         setOnQuery(e.target.value);
+         setPage(1);
+      },
+      250
+   );
 
-  return (
-    <div className={css.app}>
-      <header className={css.toolbar}>
-        <SearchBox query={handleSearchChange} />
+   return (
+      <div className={css.app}>
+         <header className={css.toolbar}>
+            <SearchBox query={onFound} />
 
-        {totalPages > 1 && (
-          <Paginate
-            totalPages={totalPages}
-            currentPage={page}
-            setPage={setPage}
-          />
-        )}
+            {totalPages > 1 && (
+               <Paginate
+                  totalPages={totalPages}
+                  currentPage={page}
+                  setPage={setPage}
+               />
+            )}
 
-        <button className={css.button} onClick={openModal}>
-          Create note +
-        </button>
-      </header>
+            <button className={css.button} onClick={openModal}>
+               Create note +
+            </button>
+         </header>
 
-      {isLoading && <div className={css.statusBox}>Loading notes...</div>}
+         {isLoading && <div className={css.statusBox}>Loading notes...</div>}
 
-      {isError && (
-        <div className={css.statusBoxError}>
-          Something went wrong! Try again
-        </div>
-      )}
+         {isError && (
+            <div className={css.statusBoxError}>
+               Something went wrong! Try again
+            </div>
+         )}
 
-      {isSuccess && notes.length > 0 && <NoteList notes={notes} />}
+         {isSuccess && notes.length > 0 && <NoteList notes={notes} />}
 
-      {isSuccess && notes.length === 0 && (
-        <div className={css.statusBox}>
-          No notes yet. Create your first note ✨
-        </div>
-      )}
+         {isSuccess && notes.length === 0 && (
+            <div className={css.statusBox}>
+               No notes yet. Create your first note ✨
+            </div>
+         )}
 
-      {isModalOpen && (
-        <Modal onClose={closeModal}>
-          <NoteForm onClose={closeModal} />
-        </Modal>
-      )}
-    </div>
-  );
+         {modalOpen && (
+            <Modal onClose={closeModal}>
+               <NoteForm onClose={closeModal} />
+            </Modal>
+         )}
+      </div>
+   );
 }
